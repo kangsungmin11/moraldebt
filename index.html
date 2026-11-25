@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>어머니의 빚 6,000만 원 나누기 — 공정성 토의</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Pretendard & Noto Sans KR 웹폰트 -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Pretendard"', '"Noto Sans KR"', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* =========================================================================
+       100dvh 단일 화면 고정 레이아웃 (세로 스크롤 완전 차단)
+       ========================================================================= */
+    html, body {
+      height: 100dvh;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+      background-color: #f1f5f9;
+      color: #1e293b;
+      user-select: none;
+    }
+
+    /* 입력 필드는 텍스트 선택 허용 */
+    input, textarea {
+      user-select: text;
+    }
+
+    /* 중앙 2×2 그리드 (화면 높이에 맞춰 정확히 2등분) */
+    .main-grid {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: clamp(8px, 1.1vh, 14px);
+      padding: clamp(8px, 1.1vh, 14px) clamp(10px, 1.4vw, 18px);
+    }
+
+    /* 인물 일러스트 반응형 크기 */
+    .portrait-box {
+      width: clamp(54px, 7vh, 76px);
+      height: clamp(54px, 7vh, 76px);
+      flex-shrink: 0;
+    }
+
+    /* 유동 폰트 유틸리티 (768px 태블릿 ~ 1080px 전자칠판 대응) */
+    .text-fluid-title { font-size: clamp(14px, 1.8vh, 20px); }
+    .text-fluid-name  { font-size: clamp(14px, 1.9vh, 20px); }
+    .text-fluid-badge { font-size: clamp(10px, 1.25vh, 13px); }
+    .text-fluid-body  { font-size: clamp(11px, 1.35vh, 14px); }
+    .text-fluid-amt   { font-size: clamp(16px, 2.3vh, 24px); }
+    .text-fluid-btn   { font-size: clamp(11px, 1.3vh, 13px); }
+
+    /* 커스텀 슬라이더 */
+    input[type="range"].debt-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: clamp(8px, 1.1vh, 12px);
+      border-radius: 9999px;
+      background: #e2e8f0;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"].debt-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: clamp(18px, 2.4vh, 24px);
+      height: clamp(18px, 2.4vh, 24px);
+      border-radius: 50%;
+      background: #ffffff;
+      border: 3.5px solid currentColor;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.22);
+      cursor: pointer;
+      transition: transform 0.12s ease;
+    }
+    input[type="range"].debt-slider::-webkit-slider-thumb:hover,
+    input[type="range"].debt-slider::-webkit-slider-thumb:active {
+      transform: scale(1.14);
+    }
+    input[type="range"].debt-slider::-moz-range-thumb {
+      width: clamp(18px, 2.4vh, 24px);
+      height: clamp(18px, 2.4vh, 24px);
+      border-radius: 50%;
+      background: #ffffff;
+      border: 3.5px solid currentColor;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.22);
+      cursor: pointer;
+    }
+
+    /* 숫자 입력 스핀 버튼 숨김 */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    /* 말풍선 디자인 */
+    .speech-box {
+      position: relative;
+    }
+    .speech-box::before {
+      content: "";
+      position: absolute;
+      top: -5px;
+      left: 18px;
+      width: 8px;
+      height: 8px;
+      background: inherit;
+      border-top: 1px solid #cbd5e1;
+      border-left: 1px solid #cbd5e1;
+      transform: rotate(45deg);
+    }
+
+    /* 상단 토스트 애니메이션 */
+    @keyframes toastDrop {
+      from { opacity: 0; transform: translate(-50%, -14px); }
+      to   { opacity: 1; transform: translate(-50%, 0); }
+    }
+    .toast-anim {
+      animation: toastDrop 0.2s ease-out forwards;
+    }
+
+    /* 모달 등장 애니메이션 */
+    @keyframes modalPop {
+      from { opacity: 0; transform: scale(0.96); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .modal-pop {
+      animation: modalPop 0.18s ease-out forwards;
+    }
+
+    /* 인쇄 / A4 PDF 전용 스타일 (모달 비교표만 깔끔하게 출력) */
+    #printOnlyArea {
+      display: none;
+    }
+    @media print {
+      html, body {
+        height: auto !important;
+        overflow: visible !important;
+        background: #ffffff !important;
+        display: block !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      #printOnlyArea {
+        display: block !important;
+        padding: 16px;
+        color: #0f172a;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- =========================================================================
+       1단: 상단 통합 헤더 바 (고정 높이 ~60px)
+       ========================================================================= -->
+  <header class="no-print shrink-0 h-[60px] bg-white border-b border-slate-200 shadow-sm px-3 sm:px-4 flex items-center justify-between gap-3 z-20">
+    <!-- 좌측: 제목 + 상황 보기 버튼 -->
+    <div class="flex items-center gap-2.5 shrink-0">
+      <div class="flex items-center gap-1.5">
+        <span class="text-lg sm:text-xl" aria-hidden="true">⚖️</span>
+        <h1 class="font-extrabold text-slate-900 tracking-tight text-fluid-title whitespace-nowrap">
+          어머니의 빚 <span class="text-indigo-600">6,000만 원</span> 나누기
+        </h1>
+      </div>
+      <button
+        type="button"
+        onclick="openModal('situationModal')"
+        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs transition cursor-pointer whitespace-nowrap"
+      >
+        <span>📖</span>
+        <span>상황 보기</span>
+      </button>
+    </div>
+
+    <!-- 중앙: 실시간 누적 배분 진행 바 + 합계 + 남은 빚 배지 -->
+    <div class="flex-1 max-w-xl min-w-[200px] flex flex-col justify-center gap-1">
+      <div class="flex items-center justify-between gap-2 text-xs leading-none">
+        <div class="flex items-baseline gap-1.5 whitespace-nowrap">
+          <span class="font-bold text-slate-500">배분 합계</span>
+          <span id="headerTotalText" class="text-sm sm:text-base font-extrabold text-slate-900">0만 원</span>
+          <span class="text-slate-400 font-semibold">/ 6,000만 원</span>
+        </div>
+        <div id="headerStatusBadge" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-extrabold whitespace-nowrap bg-amber-100 text-amber-800 border border-amber-300">
+          남은 빚: 6,000만 원
+        </div>
+      </div>
+
+      <!-- 4남매 테마색 가로 스택 막대 -->
+      <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden flex shadow-inner" aria-label="실시간 누적 배분 진행 바">
+        <div id="stackBar-0" class="h-full transition-all duration-150" style="width:0%; background-color:#3B82F6;" title="첫째 김영희"></div>
+        <div id="stackBar-1" class="h-full transition-all duration-150" style="width:0%; background-color:#F59E0B;" title="둘째 김철수"></div>
+        <div id="stackBar-2" class="h-full transition-all duration-150" style="width:0%; background-color:#10B981;" title="셋째 김영수"></div>
+        <div id="stackBar-3" class="h-full transition-all duration-150" style="width:0%; background-color:#F43F5E;" title="넷째 김남희"></div>
+      </div>
+    </div>
+
+    <!-- 우측: 학급 비교표 (N) + 초기화 버튼 -->
+    <div class="flex items-center gap-2 shrink-0">
+      <button
+        type="button"
+        onclick="openModal('boardModal')"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs sm:text-sm shadow-sm transition cursor-pointer whitespace-nowrap"
+      >
+        <span>📊</span>
+        <span>학급 비교표</span>
+        <span id="boardCountBadge" class="px-1.5 py-0.5 rounded-md bg-white/20 text-[11px] font-extrabold">0</span>
+      </button>
+      <button
+        type="button"
+        onclick="applyPreset('reset')"
+        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold text-xs sm:text-sm transition cursor-pointer whitespace-nowrap"
+        title="배분 금액을 모두 0원으로 초기화"
+      >
+        <span>↺</span>
+        <span>초기화</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       2단: 중앙 메인 영역 — 2×2 그리드 4남매 카드 (flex: 1; min-height: 0;)
+       ========================================================================= -->
+  <main id="siblingsGrid" class="no-print main-grid" aria-label="4남매 빚 분배 카드 영역">
+    <!-- JS로 4남매 카드 렌더링 -->
+  </main>
+
+  <!-- =========================================================================
+       3단: 하단 컨트롤 바 (고정 높이 ~52px)
+       ========================================================================= -->
+  <footer class="no-print shrink-0 h-[52px] bg-white border-t border-slate-200 px-3 sm:px-4 flex items-center justify-between gap-2 z-20">
+    <!-- 좌측: 기준별 예시 프리셋 버튼 4개 -->
+    <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto">
+      <span class="hidden md:inline-block text-xs font-extrabold text-slate-400 mr-1 whitespace-nowrap">예시 기준:</span>
+      <button
+        type="button"
+        onclick="applyPreset('equal')"
+        class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold text-xs transition cursor-pointer whitespace-nowrap"
+      >
+        균등 분배(1,500씩)
+      </button>
+      <button
+        type="button"
+        onclick="applyPreset('income')"
+        class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-xs transition cursor-pointer whitespace-nowrap"
+      >
+        소득 비례
+      </button>
+      <button
+        type="button"
+        onclick="applyPreset('exemptYoungest')"
+        class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-xs transition cursor-pointer whitespace-nowrap"
+      >
+        막내 면제+소득비례
+      </button>
+      <button
+        type="button"
+        onclick="applyPreset('reset')"
+        class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold text-xs transition cursor-pointer whitespace-nowrap"
+      >
+        모두 0원
+      </button>
+    </div>
+
+    <!-- 우측: 우리 모둠 결론 기록하기 메인 버튼 + 안내 -->
+    <div class="flex items-center gap-2.5 shrink-0">
+      <span id="recordHelperText" class="hidden lg:inline-block text-xs font-semibold text-slate-500">
+        남은 빚을 모두 배분하면 기록할 수 있어요
+      </span>
+      <button
+        id="openRecordBtn"
+        type="button"
+        onclick="handleRecordBtnClick()"
+        title="남은 빚을 모두 배분하면 기록할 수 있어요"
+        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl font-extrabold text-xs sm:text-sm transition whitespace-nowrap bg-slate-200 text-slate-500 cursor-not-allowed"
+      >
+        <span>✍️</span>
+        <span>우리 모둠 결론 기록하기</span>
+      </button>
+    </div>
+  </footer>
+
+  <!-- =========================================================================
+       상단 토스트 알림 컨테이너 (6,000만 원 초과 방지 및 피드백)
+       ========================================================================= -->
+  <div id="toastContainer" class="no-print fixed top-[68px] left-1/2 -translate-x-1/2 z-50 pointer-events-none"></div>
+
+  <!-- =========================================================================
+       모달 1: 상황 안내 모달 (칠판/카드 디자인)
+       ========================================================================= -->
+  <div
+    id="situationModal"
+    class="no-print fixed inset-0 z-40 hidden items-center justify-center bg-slate-900/55 backdrop-blur-xs p-4"
+    onclick="backdropClose(event, 'situationModal')"
+  >
+    <div class="modal-pop bg-white rounded-3xl shadow-2xl max-w-xl w-full overflow-hidden border border-slate-200">
+      <!-- 칠판 스타일 상단 -->
+      <div class="bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 p-6 sm:p-8 text-white relative border-b-8 border-amber-700/80">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-amber-200 text-xs font-bold mb-4">
+          <span>📌</span>
+          <span>오늘의 토의 상황</span>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-extrabold text-amber-300 mb-4 tracking-tight">
+          어머니가 남긴 6,000만 원의 빚
+        </h2>
+        <div class="space-y-3 text-base sm:text-lg leading-relaxed font-medium text-emerald-50">
+          <p>
+            어머니가 돌아가시면서 <strong class="text-amber-300 font-extrabold underline decoration-amber-400/60 underline-offset-4">6천만 원의 빚</strong>을 남겼습니다.
+          </p>
+          <p>
+            남겨진 아들, 딸인 4남매가 이 빚을 나누어 갚아야 합니다.
+          </p>
+          <p>
+            네 남매는 한자리에 모여 이 빚을 어떻게 나누어 갚을지 의논하게 되었습니다.
+          </p>
+        </div>
+      </div>
+
+      <!-- 하단 안내 및 닫기 -->
+      <div class="p-5 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <p class="text-xs sm:text-sm text-slate-600 font-medium">
+          💡 네 남매의 직업, 가족 구성, 소득, 주장을 살펴보고 가장 공정한 방법을 찾아보세요!
+        </p>
+        <button
+          type="button"
+          onclick="closeModal('situationModal')"
+          class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm transition cursor-pointer shrink-0"
+        >
+          확인하고 토의하기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       모달 2: 우리 모둠 결론 기록 모달
+       ========================================================================= -->
+  <div
+    id="recordModal"
+    class="no-print fixed inset-0 z-40 hidden items-center justify-center bg-slate-900/55 backdrop-blur-xs p-4"
+    onclick="backdropClose(event, 'recordModal')"
+  >
+    <div class="modal-pop bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90dvh] flex flex-col overflow-hidden border border-slate-200">
+      <div class="px-6 py-4 bg-indigo-600 text-white flex items-center justify-between shrink-0">
+        <h2 class="text-lg font-extrabold flex items-center gap-2">
+          <span>✍️</span> 우리 모둠 결론 기록하기
+        </h2>
+        <button type="button" onclick="closeModal('recordModal')" class="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center font-bold cursor-pointer">✕</button>
+      </div>
+
+      <form id="recordForm" onsubmit="saveGroupConclusion(event)" class="p-6 space-y-4 overflow-y-auto">
+        <!-- 현재 배분 요약 (4인 카드) -->
+        <div>
+          <span class="block text-xs font-extrabold text-slate-500 mb-2">우리 모둠이 정한 빚 배분 (합계 6,000만 원)</span>
+          <div id="recordSummaryCards" class="grid grid-cols-4 gap-2"></div>
+        </div>
+
+        <!-- 모둠 이름 -->
+        <div>
+          <label for="groupNameInput" class="block text-sm font-bold text-slate-700 mb-1">
+            모둠 이름 <span class="text-rose-500">*</span>
+          </label>
+          <input
+            id="groupNameInput"
+            type="text"
+            placeholder="예: 1모둠, 정의수호대"
+            maxlength="20"
+            required
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm font-semibold"
+          />
+        </div>
+
+        <!-- 공정성 기준 선택 태그 -->
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1.5">
+            우리 모둠의 공정성 기준 <span class="text-rose-500">*</span>
+          </label>
+          <div id="criteriaTagGroup" class="flex flex-wrap gap-1.5 mb-2">
+            <button type="button" data-tag="균등 분배" onclick="selectCriteriaTag(this)" class="criteria-tag px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 hover:bg-indigo-50 cursor-pointer transition">균등 분배</button>
+            <button type="button" data-tag="소득 비례" onclick="selectCriteriaTag(this)" class="criteria-tag px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 hover:bg-indigo-50 cursor-pointer transition">소득 비례</button>
+            <button type="button" data-tag="가족 형편 고려" onclick="selectCriteriaTag(this)" class="criteria-tag px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 hover:bg-indigo-50 cursor-pointer transition">가족 형편 고려</button>
+            <button type="button" data-tag="절충안" onclick="selectCriteriaTag(this)" class="criteria-tag px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 hover:bg-indigo-50 cursor-pointer transition">절충안</button>
+            <button type="button" data-tag="직접 입력" onclick="selectCriteriaTag(this)" class="criteria-tag px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 hover:bg-indigo-50 cursor-pointer transition">직접 입력</button>
+          </div>
+          <input
+            id="criteriaInput"
+            type="text"
+            placeholder="위 태그를 선택하거나 기준을 직접 입력하세요"
+            maxlength="30"
+            required
+            class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm"
+          />
+        </div>
+
+        <!-- 그렇게 정한 이유 -->
+        <div>
+          <label for="rationaleInput" class="block text-sm font-bold text-slate-700 mb-1">
+            그렇게 정한 이유 <span class="text-rose-500">*</span>
+          </label>
+          <textarea
+            id="rationaleInput"
+            rows="3"
+            placeholder="왜 이 방법이 가장 공정하다고 생각했나요? 모둠 친구들의 의견을 정리해 적어 보세요."
+            required
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm resize-none"
+          ></textarea>
+        </div>
+
+        <!-- 버튼 -->
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('recordModal')" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm cursor-pointer">
+            취소
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm shadow-sm cursor-pointer">
+            저장하고 학급 비교표 보기
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       모달 3: 학급 비교 보드 모달
+       ========================================================================= -->
+  <div
+    id="boardModal"
+    class="no-print fixed inset-0 z-40 hidden items-center justify-center bg-slate-900/55 backdrop-blur-xs p-4"
+    onclick="backdropClose(event, 'boardModal')"
+  >
+    <div class="modal-pop bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[88dvh] flex flex-col overflow-hidden border border-slate-200">
+      <!-- 모달 헤더 -->
+      <div class="px-6 py-4 bg-slate-800 text-white flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">📊</span>
+          <h2 class="text-lg font-extrabold">학급 모둠별 공정 분배 비교표</h2>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            onclick="copyBoardSummary()"
+            class="px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold transition cursor-pointer"
+          >
+            📋 결과 복사
+          </button>
+          <button
+            type="button"
+            onclick="printComparisonBoard()"
+            class="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 text-xs font-extrabold transition cursor-pointer"
+          >
+            🖨️ 인쇄 / PDF 저장
+          </button>
+          <button type="button" onclick="closeModal('boardModal')" class="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center font-bold cursor-pointer ml-1">✕</button>
+        </div>
+      </div>
+
+      <!-- 모달 본문 -->
+      <div class="p-5 overflow-y-auto flex-1">
+        <!-- 빈 상태 -->
+        <div id="boardEmptyState" class="py-14 text-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50">
+          <div class="text-3xl mb-2">📝</div>
+          <p class="text-slate-700 font-extrabold text-base">아직 기록된 모둠이 없어요.</p>
+          <p class="text-xs sm:text-sm text-slate-500 mt-1">메인 화면에서 6,000만 원을 모두 배분한 뒤 「우리 모둠 결론 기록하기」를 눌러 추가해 보세요!</p>
+        </div>
+
+        <!-- 비교 테이블 -->
+        <div id="boardTableContainer" class="hidden overflow-x-auto">
+          <table class="w-full text-left border-collapse min-w-[700px]">
+            <thead>
+              <tr class="border-b-2 border-slate-200 text-xs font-extrabold text-slate-500">
+                <th class="py-2.5 px-3">모둠</th>
+                <th class="py-2.5 px-3">공정성 기준</th>
+                <th class="py-2.5 px-3 text-right text-blue-600">첫째 김영희</th>
+                <th class="py-2.5 px-3 text-right text-amber-600">둘째 김철수</th>
+                <th class="py-2.5 px-3 text-right text-emerald-600">셋째 김영수</th>
+                <th class="py-2.5 px-3 text-right text-rose-600">넷째 김남희</th>
+                <th class="py-2.5 px-3">정한 이유</th>
+                <th class="py-2.5 px-2 text-center">삭제</th>
+              </tr>
+            </thead>
+            <tbody id="boardTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+            <tfoot id="boardTableFoot" class="border-t-2 border-slate-300 bg-indigo-50/70 font-extrabold text-sm"></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- 모달 하단 (전체 삭제 인라인 확인 포함) -->
+      <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+        <div>
+          <button
+            id="clearAllTriggerBtn"
+            type="button"
+            onclick="showClearConfirm()"
+            class="hidden px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 text-slate-500 text-xs font-bold transition cursor-pointer"
+          >
+            전체 기록 비우기
+          </button>
+          <div id="clearConfirmBar" class="hidden inline-flex items-center gap-2 bg-rose-50 border border-rose-200 px-3 py-1 rounded-xl">
+            <span class="text-xs font-bold text-rose-700">모든 모둠 기록을 삭제할까요?</span>
+            <button type="button" onclick="confirmClearAll()" class="px-2.5 py-1 rounded-lg bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 cursor-pointer">삭제</button>
+            <button type="button" onclick="hideClearConfirm()" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-100 cursor-pointer">취소</button>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('boardModal')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs sm:text-sm font-bold cursor-pointer">
+          닫기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       A4 인쇄 / PDF 전용 출력 영역
+       ========================================================================= -->
+  <section id="printOnlyArea" aria-hidden="true"></section>
+
+  <script>
+    /* =========================================================================
+       1. 4남매 인물 데이터 & 개성 있는 커스텀 SVG 일러스트
+       ========================================================================= */
+    const TARGET_DEBT = 6000; // 목표 빚 총액: 6,000만 원
+    const STORAGE_KEY = 'fair_debt_100dvh_groups_v1';
+
+    const SIBLINGS = [
+      {
+        id: 0,
+        order: '첫째',
+        name: '김영희',
+        age: 48,
+        role: '장녀·딸',
+        family: '결혼하지 않고 혼자 삶 (1인 가구)',
+        job: '의사',
+        income: '연 1억 원',
+        trait: '4남매 중 소득이 가장 높고 부양할 가족이 없음.',
+        stance: '“4남매가 빚을 똑같이(1500만원씩) 나누어 갚자.”',
+        colorHex: '#3B82F6',
+        theme: {
+          border: 'border-blue-200',
+          topAccent: 'bg-blue-500',
+          badgeBg: 'bg-blue-100',
+          badgeText: 'text-blue-800',
+          traitBg: 'bg-blue-50/80',
+          traitText: 'text-blue-900',
+          amountText: 'text-blue-700',
+          fillBtn: 'bg-blue-600 hover:bg-blue-700 text-white',
+        },
+        // 의사 가운과 청진기를 걸친 김영희
+        svg: `
+          <svg viewBox="0 0 120 120" class="w-full h-full rounded-2xl border border-blue-200 shadow-xs" aria-label="첫째 의사 김영희">
+            <rect width="120" height="120" rx="22" fill="#EFF6FF"/>
+            <circle cx="60" cy="62" r="46" fill="#DBEAFE"/>
+            <path d="M31 52c0-20 12-30 29-30s29 10 29 30c0 12-4 20-11 24H42c-7-4-11-12-11-24z" fill="#3B2F2F"/>
+            <rect x="52" y="68" width="16" height="14" rx="6" fill="#FBD3B6"/>
+            <path d="M22 118c3-22 16-34 38-34s35 12 38 34z" fill="#FFFFFF" stroke="#93C5FD" stroke-width="2"/>
+            <path d="M47 84l13 24 13-24z" fill="#2563EB"/>
+            <path d="M47 84l-6 18 11 4 8-22z" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+            <path d="M73 84l6 18-11 4-8-22z" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+            <path d="M44 85c-3 10 0 21 9 23" fill="none" stroke="#334155" stroke-width="3" stroke-linecap="round"/>
+            <path d="M76 85c3 10 0 20-7 23" fill="none" stroke="#334155" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="71" cy="109" r="5" fill="#94A3B8" stroke="#334155" stroke-width="2"/>
+            <circle cx="53" cy="108" r="2.5" fill="#334155"/>
+            <ellipse cx="60" cy="52" rx="19" ry="21" fill="#FDE0C8"/>
+            <path d="M40 48c2-14 11-22 20-22 11 0 19 8 20 22-4-7-11-11-18-11-8 0-15 4-22 11z" fill="#3B2F2F"/>
+            <circle cx="40" cy="57" r="2.3" fill="#F59E0B"/>
+            <circle cx="80" cy="57" r="2.3" fill="#F59E0B"/>
+            <path d="M48 47c2-1.5 5-1.5 7 0" stroke="#3B2F2F" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+            <path d="M65 47c2-1.5 5-1.5 7 0" stroke="#3B2F2F" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+            <circle cx="52" cy="52" r="2.3" fill="#1E293B"/>
+            <circle cx="68" cy="52" r="2.3" fill="#1E293B"/>
+            <ellipse cx="47" cy="58" rx="3.5" ry="2" fill="#FCA5A5" opacity="0.45"/>
+            <ellipse cx="73" cy="58" rx="3.5" ry="2" fill="#FCA5A5" opacity="0.45"/>
+            <path d="M55 62c2.5 1.5 7.5 1.5 10 0" stroke="#B45309" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+        `
+      },
+      {
+        id: 1,
+        order: '둘째',
+        name: '김철수',
+        age: 45,
+        role: '장남·아들',
+        family: '주부인 아내와 자녀 2명 (4인 가구·외벌이)',
+        job: '작은 회사 과장',
+        income: '연 4,000만 원',
+        trait: '혼자 벌어 4인 가족을 부양해 생활비 부담이 큼.',
+        stance: '“1500만원을 내는 건 부담스럽다. 소득이 많은 사람이 더 내면 좋겠다.”',
+        colorHex: '#F59E0B',
+        theme: {
+          border: 'border-amber-200',
+          topAccent: 'bg-amber-500',
+          badgeBg: 'bg-amber-100',
+          badgeText: 'text-amber-900',
+          traitBg: 'bg-amber-50/80',
+          traitText: 'text-amber-900',
+          amountText: 'text-amber-700',
+          fillBtn: 'bg-amber-600 hover:bg-amber-700 text-white',
+        },
+        // 점퍼 차림에 고민하는 김철수
+        svg: `
+          <svg viewBox="0 0 120 120" class="w-full h-full rounded-2xl border border-amber-200 shadow-xs" aria-label="둘째 작은 회사 과장 김철수">
+            <rect width="120" height="120" rx="22" fill="#FFFBEB"/>
+            <circle cx="60" cy="62" r="46" fill="#FEF3C7"/>
+            <rect x="51" y="68" width="18" height="14" rx="6" fill="#F7C8A4"/>
+            <path d="M20 118c3-22 17-34 40-34s37 12 40 34z" fill="#334155"/>
+            <path d="M49 84l11 16 11-16z" fill="#E2E8F0"/>
+            <line x1="60" y1="98" x2="60" y2="118" stroke="#94A3B8" stroke-width="2"/>
+            <rect x="70" y="99" width="14" height="5" rx="2" fill="#F59E0B"/>
+            <path d="M47 84l-6 12 10 3" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round"/>
+            <path d="M73 84l6 12-10 3" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round"/>
+            <ellipse cx="60" cy="52" rx="19" ry="21" fill="#FBD2B0"/>
+            <path d="M40 49c0-16 9-25 20-25 12 0 20 9 20 25-4-8-10-12-20-12s-16 4-20 12z" fill="#1E293B"/>
+            <path d="M46 47l8-2.5" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round"/>
+            <path d="M74 47l-8-2.5" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="52" cy="52" r="2.3" fill="#1E293B"/>
+            <circle cx="68" cy="52" r="2.3" fill="#1E293B"/>
+            <path d="M79 44c2 3 2 5 0 6s-2-3 0-6z" fill="#38BDF8"/>
+            <path d="M54 63c3-2 9-2 12 0" stroke="#9A3412" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+        `
+      },
+      {
+        id: 2,
+        order: '셋째',
+        name: '김영수',
+        age: 40,
+        role: '차남·아들',
+        family: '초등교사 아내와 자녀 2명 (4인 가구·맞벌이)',
+        job: '공무원',
+        income: '연 8,000만 원 (아내 포함)',
+        trait: '부부 맞벌이로 가구 소득은 높지만, 아내의 소득까지 합친 금액임.',
+        stance: '“버는 돈이 많다고 돈을 더 많이 내는 건 어렵다.”',
+        colorHex: '#10B981',
+        theme: {
+          border: 'border-emerald-200',
+          topAccent: 'bg-emerald-500',
+          badgeBg: 'bg-emerald-100',
+          badgeText: 'text-emerald-900',
+          traitBg: 'bg-emerald-50/80',
+          traitText: 'text-emerald-900',
+          amountText: 'text-emerald-700',
+          fillBtn: 'bg-emerald-600 hover:bg-emerald-700 text-white',
+        },
+        // 정장 차림 공무원 김영수
+        svg: `
+          <svg viewBox="0 0 120 120" class="w-full h-full rounded-2xl border border-emerald-200 shadow-xs" aria-label="셋째 공무원 김영수">
+            <rect width="120" height="120" rx="22" fill="#ECFDF5"/>
+            <circle cx="60" cy="62" r="46" fill="#D1FAE5"/>
+            <rect x="52" y="68" width="16" height="14" rx="6" fill="#FBD3B6"/>
+            <path d="M21 118c3-22 17-34 39-34s36 12 39 34z" fill="#1E293B"/>
+            <polygon points="48,84 60,108 72,84" fill="#FFFFFF"/>
+            <polygon points="57,86 63,86 62,92 64,108 60,114 56,108 58,92" fill="#10B981"/>
+            <polygon points="48,84 40,98 52,104" fill="#334155"/>
+            <polygon points="72,84 80,98 68,104" fill="#334155"/>
+            <ellipse cx="60" cy="52" rx="18.5" ry="20.5" fill="#FDE0C8"/>
+            <path d="M41 48c0-15 8-25 19-25 11 0 19 8 19 25-3-7-8-13-19-13-9 0-15 5-19 13z" fill="#1F2937"/>
+            <path d="M47 46.5h8" stroke="#1F2937" stroke-width="2.1" stroke-linecap="round"/>
+            <path d="M65 46.5h8" stroke="#1F2937" stroke-width="2.1" stroke-linecap="round"/>
+            <circle cx="52" cy="52" r="2.2" fill="#1E293B"/>
+            <circle cx="68" cy="52" r="2.2" fill="#1E293B"/>
+            <line x1="54" y1="62" x2="66" y2="62" stroke="#92400E" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        `
+      },
+      {
+        id: 3,
+        order: '넷째',
+        name: '김남희',
+        age: 35,
+        role: '막내·딸',
+        family: '직장을 잃은 남편과 자녀 1명 (3인 가구·외벌이)',
+        job: '회사에서 물건을 파는 일',
+        income: '연 2,000만 원',
+        trait: '소득이 가장 적고 남편의 실직으로 당장 생계가 어려움.',
+        stance: '“돈을 잘 버는 언니, 오빠들과 똑같이 낼 수 없다. 한 푼도 내기 어렵다.”',
+        colorHex: '#F43F5E',
+        theme: {
+          border: 'border-rose-200',
+          topAccent: 'bg-rose-500',
+          badgeBg: 'bg-rose-100',
+          badgeText: 'text-rose-900',
+          traitBg: 'bg-rose-50/80',
+          traitText: 'text-rose-900',
+          amountText: 'text-rose-700',
+          fillBtn: 'bg-rose-600 hover:bg-rose-700 text-white',
+        },
+        // 단정한 묶음머리 걱정스러운 김남희
+        svg: `
+          <svg viewBox="0 0 120 120" class="w-full h-full rounded-2xl border border-rose-200 shadow-xs" aria-label="넷째 막내 김남희">
+            <rect width="120" height="120" rx="22" fill="#FFF1F2"/>
+            <circle cx="60" cy="62" r="46" fill="#FFE4E6"/>
+            <circle cx="60" cy="24" r="11" fill="#3F2B2B"/>
+            <rect x="52" y="29" width="16" height="4" rx="2" fill="#F43F5E"/>
+            <rect x="53" y="68" width="14" height="14" rx="6" fill="#FBD3B6"/>
+            <path d="M23 118c3-21 16-33 37-33s34 12 37 33z" fill="#E11D48"/>
+            <path d="M47 85c4 9 22 9 26 0" fill="none" stroke="#FFE4E6" stroke-width="3" stroke-linecap="round"/>
+            <ellipse cx="60" cy="53" rx="18" ry="20" fill="#FDE0C8"/>
+            <path d="M41 50c1-14 9-22 19-22s18 8 19 22c-3-6-9-11-19-11s-16 5-19 11z" fill="#3F2B2B"/>
+            <path d="M47 48l7-2.5" stroke="#3F2B2B" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M73 48l-7-2.5" stroke="#3F2B2B" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="52" cy="53" r="2.4" fill="#1E293B"/>
+            <circle cx="68" cy="53" r="2.4" fill="#1E293B"/>
+            <circle cx="51.2" cy="52.2" r="0.8" fill="#FFFFFF"/>
+            <circle cx="67.2" cy="52.2" r="0.8" fill="#FFFFFF"/>
+            <ellipse cx="47" cy="59" rx="3.2" ry="1.8" fill="#FB7185" opacity="0.4"/>
+            <ellipse cx="73" cy="59" rx="3.2" ry="1.8" fill="#FB7185" opacity="0.4"/>
+            <path d="M55 64c2.5-2 7.5-2 10 0" stroke="#9F1239" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+        `
+      }
+    ];
+
+    /* =========================================================================
+       2. 상태 관리
+       ========================================================================= */
+    let allocations = [0, 0, 0, 0]; // 각 남매 배분액 (만 원)
+    let savedGroups = loadGroups();
+    let lastCapToastAt = 0;
+
+    function loadGroups() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function persistGroups() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(savedGroups));
+      } catch (e) {
+        // 스토리지 제한 환경 예외 무시
+      }
+    }
+
+    /* =========================================================================
+       3. 유틸리티 & 토스트 알림
+       ========================================================================= */
+    function fmtMan(val) {
+      return `${Number(val).toLocaleString('ko-KR')}만 원`;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function showToast(msg, type = 'info') {
+      const box = document.getElementById('toastContainer');
+      const styles = {
+        info: 'bg-slate-800 text-white',
+        success: 'bg-emerald-600 text-white',
+        warning: 'bg-rose-600 text-white',
+      };
+      const el = document.createElement('div');
+      el.className = `toast-anim px-4 py-2 rounded-2xl shadow-lg text-xs sm:text-sm font-extrabold whitespace-nowrap ${styles[type] || styles.info}`;
+      el.textContent = msg;
+      box.innerHTML = '';
+      box.appendChild(el);
+      setTimeout(() => {
+        if (box.contains(el)) el.remove();
+      }, 2200);
+    }
+
+    function notifyCapExceeded() {
+      const now = Date.now();
+      if (now - lastCapToastAt > 750) {
+        showToast('총 빚 6,000만 원을 넘길 수 없어요!', 'warning');
+        lastCapToastAt = now;
+      }
+    }
+
+    /* =========================================================================
+       4. 2×2 4남매 카드 렌더링 (100dvh 컴팩트 설계)
+       ========================================================================= */
+    function renderSiblingCards() {
+      const grid = document.getElementById('siblingsGrid');
+      grid.innerHTML = SIBLINGS.map((s) => `
+        <article class="bg-white rounded-2xl border-2 ${s.theme.border} shadow-sm flex flex-col justify-between min-h-0 overflow-hidden">
+          <!-- 상단 얇은 컬러 라인 -->
+          <div class="h-1.5 w-full ${s.theme.topAccent} shrink-0"></div>
+
+          <!-- 카드 내부 콘텐츠 (유연한 수직 분배) -->
+          <div class="flex-1 min-h-0 flex flex-col justify-between p-2.5 sm:p-3 gap-1.5">
+
+            <!-- [행 1] 프로필 행: 커스텀 SVG 일러스트 + 이름/서열/나이 + 핵심 정보 배지 -->
+            <div class="flex items-center gap-2.5 min-h-0">
+              <div class="portrait-box">${s.svg}</div>
+
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center flex-wrap gap-1.5 mb-1">
+                  <span class="px-2 py-0.5 rounded-md font-extrabold text-fluid-badge ${s.theme.badgeBg} ${s.theme.badgeText}">
+                    ${s.order} (${s.role})
+                  </span>
+                  <h2 class="font-extrabold text-slate-900 text-fluid-name leading-tight">
+                    ${s.name} <span class="text-slate-500 font-semibold text-fluid-badge">(${s.age}세)</span>
+                  </h2>
+                </div>
+
+                <!-- 핵심 정보 배지 (직업, 연소득, 가족 구성) -->
+                <div class="flex flex-wrap items-center gap-1 text-fluid-badge font-bold">
+                  <span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700">💼 ${s.job}</span>
+                  <span class="px-2 py-0.5 rounded-lg bg-slate-800 text-white">💰 ${s.income}</span>
+                  <span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 truncate max-w-full">👨‍👩‍👧 ${s.family}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- [행 2] 특징 요약 + 말풍선 주장 -->
+            <div class="space-y-1.5 min-h-0">
+              <div class="px-2.5 py-1 rounded-xl ${s.theme.traitBg} ${s.theme.traitText} text-fluid-body font-bold leading-snug truncate" title="${s.trait}">
+                <span class="mr-1">🔍</span>특징: ${s.trait}
+              </div>
+              <div class="speech-box px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-fluid-body font-extrabold leading-snug line-clamp-2">
+                ${s.stance}
+              </div>
+            </div>
+
+            <!-- [행 3] 하단 빚 배분 컨트롤 영역 (연소득 대비 부담률 없음) -->
+            <div class="bg-slate-50/90 rounded-xl border border-slate-200/80 p-2 sm:p-2.5 space-y-1.5 shrink-0">
+              <!-- 배분 금액 + 전체 빚 중 비중 + 직접 입력 -->
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-baseline gap-2 min-w-0">
+                  <span id="amtDisplay-${s.id}" class="font-extrabold text-fluid-amt ${s.theme.amountText} leading-none">0만 원</span>
+                  <span id="shareDisplay-${s.id}" class="px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600 font-bold text-fluid-badge whitespace-nowrap">
+                    전체 빚의 0%
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-1 shrink-0">
+                  <input
+                    id="numInput-${s.id}"
+                    type="number"
+                    min="0"
+                    max="6000"
+                    step="10"
+                    value="0"
+                    aria-label="${s.name} 배분 금액 직접 입력(만 원)"
+                    oninput="handleNumberInput(${s.id}, this.value)"
+                    class="w-20 text-right font-extrabold text-slate-900 bg-white border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 rounded-lg px-2 py-1 text-fluid-body outline-none"
+                  />
+                  <span class="text-fluid-badge font-bold text-slate-500">만 원</span>
+                </div>
+              </div>
+
+              <!-- 슬라이더 (0~6000, step 10) -->
+              <input
+                id="slider-${s.id}"
+                type="range"
+                min="0"
+                max="6000"
+                step="10"
+                value="0"
+                aria-label="${s.name} 배분 슬라이더"
+                style="color: ${s.colorHex};"
+                oninput="handleSliderInput(${s.id}, this.value)"
+                class="debt-slider"
+              />
+
+              <!-- 빠른 조절 버튼 5개 -->
+              <div class="grid grid-cols-5 gap-1">
+                <button
+                  id="btnM500-${s.id}"
+                  type="button"
+                  onclick="adjustDebt(${s.id}, -500)"
+                  class="py-1 rounded-lg text-fluid-btn font-extrabold bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 disabled:opacity-35 disabled:cursor-not-allowed transition cursor-pointer"
+                >-500</button>
+                <button
+                  id="btnM100-${s.id}"
+                  type="button"
+                  onclick="adjustDebt(${s.id}, -100)"
+                  class="py-1 rounded-lg text-fluid-btn font-extrabold bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 disabled:opacity-35 disabled:cursor-not-allowed transition cursor-pointer"
+                >-100</button>
+                <button
+                  id="btnP100-${s.id}"
+                  type="button"
+                  onclick="adjustDebt(${s.id}, 100)"
+                  class="py-1 rounded-lg text-fluid-btn font-extrabold bg-white border border-slate-300 hover:bg-indigo-50 text-slate-800 disabled:opacity-35 disabled:cursor-not-allowed transition cursor-pointer"
+                >+100</button>
+                <button
+                  id="btnP500-${s.id}"
+                  type="button"
+                  onclick="adjustDebt(${s.id}, 500)"
+                  class="py-1 rounded-lg text-fluid-btn font-extrabold bg-white border border-slate-300 hover:bg-indigo-50 text-slate-800 disabled:opacity-35 disabled:cursor-not-allowed transition cursor-pointer"
+                >+500</button>
+                <button
+                  id="btnFill-${s.id}"
+                  type="button"
+                  onclick="fillRemaining(${s.id})"
+                  class="py-1 rounded-lg text-fluid-btn font-extrabold ${s.theme.fillBtn} disabled:opacity-35 disabled:cursor-not-allowed transition cursor-pointer truncate px-1"
+                  title="남은 빚을 모두 채우기"
+                >남은 빚 채우기</button>
+              </div>
+            </div>
+
+          </div>
+        </article>
+      `).join('');
+
+      syncUI();
+    }
+
+    /* =========================================================================
+       5. 6,000만 원 초과 절대 방지(Clamping) 로직
+       ========================================================================= */
+    function getMaxAllowed(id) {
+      const others = allocations.reduce((sum, val, idx) => (idx === id ? sum : sum + val), 0);
+      return Math.max(0, TARGET_DEBT - others);
+    }
+
+    function setClampedDebt(id, desiredVal) {
+      const maxAllowed = getMaxAllowed(id);
+      let next = Math.round(Number(desiredVal) || 0);
+      if (next < 0) next = 0;
+
+      if (next > maxAllowed) {
+        next = maxAllowed;
+        notifyCapExceeded();
+      }
+
+      allocations[id] = next;
+      document.getElementById(`slider-${id}`).value = next;
+      document.getElementById(`numInput-${id}`).value = next;
+      syncUI();
+    }
+
+    function handleSliderInput(id, val) {
+      setClampedDebt(id, val);
+    }
+
+    function handleNumberInput(id, val) {
+      if (val === '') {
+        allocations[id] = 0;
+        document.getElementById(`slider-${id}`).value = 0;
+        syncUI();
+        return;
+      }
+      setClampedDebt(id, val);
+    }
+
+    function adjustDebt(id, delta) {
+      setClampedDebt(id, allocations[id] + delta);
+    }
+
+    function fillRemaining(id) {
+      const maxAllowed = getMaxAllowed(id);
+      if (allocations[id] >= maxAllowed) {
+        notifyCapExceeded();
+        return;
+      }
+      allocations[id] = maxAllowed;
+      document.getElementById(`slider-${id}`).value = maxAllowed;
+      document.getElementById(`numInput-${id}`).value = maxAllowed;
+      syncUI();
+      showToast(`${SIBLINGS[id].name}에게 남은 빚을 모두 채웠어요!`, 'success');
+    }
+
+    /* =========================================================================
+       6. 전체 UI 실시간 동기화
+       ========================================================================= */
+    function syncUI() {
+      const total = allocations.reduce((acc, v) => acc + v, 0);
+      const remaining = Math.max(0, TARGET_DEBT - total);
+
+      // 상단 헤더 합계 & 상태 배지
+      document.getElementById('headerTotalText').textContent = fmtMan(total);
+      const badge = document.getElementById('headerStatusBadge');
+      if (remaining === 0) {
+        badge.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-extrabold whitespace-nowrap bg-emerald-100 text-emerald-800 border border-emerald-300';
+        badge.textContent = '🎉 배분 완료!';
+      } else {
+        badge.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-extrabold whitespace-nowrap bg-amber-100 text-amber-800 border border-amber-300';
+        badge.textContent = `남은 빚: ${fmtMan(remaining)}`;
+      }
+
+      // 각 카드 금액, 비중, 스택 바, 버튼 활성/비활성 제어
+      SIBLINGS.forEach((s) => {
+        const val = allocations[s.id];
+        const pct = (val / TARGET_DEBT) * 100;
+
+        document.getElementById(`stackBar-${s.id}`).style.width = `${pct}%`;
+        document.getElementById(`amtDisplay-${s.id}`).textContent = fmtMan(val);
+        document.getElementById(`shareDisplay-${s.id}`).textContent = `전체 빚의 ${Math.round(pct)}%`;
+
+        document.getElementById(`btnM500-${s.id}`).disabled = val <= 0;
+        document.getElementById(`btnM100-${s.id}`).disabled = val <= 0;
+        document.getElementById(`btnP100-${s.id}`).disabled = remaining <= 0;
+        document.getElementById(`btnP500-${s.id}`).disabled = remaining <= 0;
+        document.getElementById(`btnFill-${s.id}`).disabled = remaining <= 0;
+      });
+
+      // 하단 '우리 모둠 결론 기록하기' 버튼 활성화 제어
+      const recordBtn = document.getElementById('openRecordBtn');
+      const helperText = document.getElementById('recordHelperText');
+      if (remaining === 0) {
+        recordBtn.className = 'inline-flex items-center gap-1.5 px-4 py-2 rounded-xl font-extrabold text-xs sm:text-sm transition whitespace-nowrap bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm cursor-pointer';
+        recordBtn.title = '우리 모둠의 토의 결론을 기록합니다';
+        helperText.textContent = '배분이 완료되었어요! 모둠 결론을 기록해 보세요.';
+        helperText.className = 'hidden lg:inline-block text-xs font-bold text-emerald-700';
+      } else {
+        recordBtn.className = 'inline-flex items-center gap-1.5 px-4 py-2 rounded-xl font-extrabold text-xs sm:text-sm transition whitespace-nowrap bg-slate-200 text-slate-500 cursor-not-allowed';
+        recordBtn.title = '남은 빚을 모두 배분하면 기록할 수 있어요';
+        helperText.textContent = '남은 빚을 모두 배분하면 기록할 수 있어요';
+        helperText.className = 'hidden lg:inline-block text-xs font-semibold text-slate-500';
+      }
+
+      // 학급 비교표 카운트 갱신
+      document.getElementById('boardCountBadge').textContent = savedGroups.length;
+    }
+
+    /* =========================================================================
+       7. 예시 프리셋 적용 (모든 합계 <= 6,000만 원)
+       ========================================================================= */
+    function applyPreset(type) {
+      let next = [0, 0, 0, 0];
+      let msg = '';
+
+      switch (type) {
+        case 'equal':
+          next = [1500, 1500, 1500, 1500];
+          msg = '균등 분배(각 1,500만 원)를 적용했어요.';
+          break;
+        case 'income':
+          // 연소득 비율 10000 : 4000 : 8000 : 2000 -> 합계 6,000만 원
+          next = [2500, 1000, 2000, 500];
+          msg = '소득 비례(2,500 / 1,000 / 2,000 / 500만 원)를 적용했어요.';
+          break;
+        case 'exemptYoungest':
+          // 막내 0원 + 나머지 3인 소득 비례 (10000 : 4000 : 8000) -> 합계 6,000만 원
+          next = [2730, 1090, 2180, 0];
+          msg = '막내 면제 + 소득 비례를 적용했어요.';
+          break;
+        case 'reset':
+        default:
+          next = [0, 0, 0, 0];
+          msg = '모두 0원으로 초기화했어요.';
+          break;
+      }
+
+      allocations = next;
+      SIBLINGS.forEach((s) => {
+        document.getElementById(`slider-${s.id}`).value = allocations[s.id];
+        document.getElementById(`numInput-${s.id}`).value = allocations[s.id];
+      });
+      syncUI();
+      showToast(msg, 'info');
+    }
+
+    /* =========================================================================
+       8. 모달 열기 / 닫기 & 결론 기록 로직
+       ========================================================================= */
+    function openModal(modalId) {
+      if (modalId === 'boardModal') {
+        renderBoardModal();
+      }
+      const el = document.getElementById(modalId);
+      el.classList.remove('hidden');
+      el.classList.add('flex');
+    }
+
+    function closeModal(modalId) {
+      const el = document.getElementById(modalId);
+      el.classList.add('hidden');
+      el.classList.remove('flex');
+      if (modalId === 'boardModal') {
+        hideClearConfirm();
+      }
+    }
+
+    function backdropClose(event, modalId) {
+      if (event.target === event.currentTarget) {
+        closeModal(modalId);
+      }
+    }
+
+    // ESC 키로 열려있는 모달 닫기
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        ['situationModal', 'recordModal', 'boardModal'].forEach(closeModal);
+      }
+    });
+
+    function handleRecordBtnClick() {
+      const total = allocations.reduce((a, b) => a + b, 0);
+      if (total !== TARGET_DEBT) {
+        showToast(`남은 빚 ${fmtMan(TARGET_DEBT - total)}을 모두 배분하면 기록할 수 있어요!`, 'warning');
+        return;
+      }
+
+      // 모달 내 4인 요약 카드 갱신 (연소득 대비 부담률 없음, 금액과 전체 비중만 표시)
+      const summaryEl = document.getElementById('recordSummaryCards');
+      summaryEl.innerHTML = SIBLINGS.map((s) => {
+        const val = allocations[s.id];
+        const pct = Math.round((val / TARGET_DEBT) * 100);
+        return `
+          <div class="rounded-xl p-2.5 border ${s.theme.border} ${s.theme.traitBg} text-center">
+            <div class="text-[11px] font-bold text-slate-600">${s.order} ${s.name}</div>
+            <div class="text-sm font-extrabold ${s.theme.amountText} mt-0.5">${fmtMan(val)}</div>
+            <div class="text-[10px] font-semibold text-slate-500">전체 빚의 ${pct}%</div>
+          </div>
+        `;
+      }).join('');
+
+      // 폼 초기화 및 태그 리셋
+      document.getElementById('recordForm').reset();
+      resetCriteriaTags();
+      openModal('recordModal');
+    }
+
+    function resetCriteriaTags() {
+      document.querySelectorAll('.criteria-tag').forEach((btn) => {
+        btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600');
+        btn.classList.add('bg-slate-50', 'text-slate-700', 'border-slate-200');
+      });
+    }
+
+    function selectCriteriaTag(btn) {
+      resetCriteriaTags();
+      btn.classList.remove('bg-slate-50', 'text-slate-700', 'border-slate-200');
+      btn.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600');
+
+      const tagVal = btn.getAttribute('data-tag');
+      const input = document.getElementById('criteriaInput');
+      if (tagVal === '직접 입력') {
+        input.value = '';
+        input.focus();
+      } else {
+        input.value = tagVal;
+      }
+    }
+
+    function saveGroupConclusion(event) {
+      event.preventDefault();
+      const groupName = document.getElementById('groupNameInput').value.trim();
+      const criteria = document.getElementById('criteriaInput').value.trim();
+      const rationale = document.getElementById('rationaleInput').value.trim();
+
+      if (!groupName || !criteria || !rationale) return;
+
+      savedGroups.push({
+        id: Date.now(),
+        groupName,
+        criteria,
+        rationale,
+        amounts: [...allocations],
+      });
+
+      persistGroups();
+      syncUI();
+      closeModal('recordModal');
+      openModal('boardModal');
+      showToast(`'${groupName}'의 결론이 학급 비교표에 저장되었어요!`, 'success');
+    }
+
+    /* =========================================================================
+       9. 학급 비교 보드 모달 렌더링 / 삭제 / 복사 / A4 인쇄
+       ========================================================================= */
+    function renderBoardModal() {
+      const emptyEl = document.getElementById('boardEmptyState');
+      const tableWrap = document.getElementById('boardTableContainer');
+      const tbody = document.getElementById('boardTableBody');
+      const tfoot = document.getElementById('boardTableFoot');
+      const clearBtn = document.getElementById('clearAllTriggerBtn');
+
+      if (savedGroups.length === 0) {
+        emptyEl.classList.remove('hidden');
+        tableWrap.classList.add('hidden');
+        clearBtn.classList.add('hidden');
+        return;
+      }
+
+      emptyEl.classList.add('hidden');
+      tableWrap.classList.remove('hidden');
+      clearBtn.classList.remove('hidden');
+
+      tbody.innerHTML = savedGroups.map((g) => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-3 px-3 font-extrabold text-slate-900 whitespace-nowrap">${escapeHtml(g.groupName)}</td>
+          <td class="py-3 px-3">
+            <span class="inline-block px-2.5 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-bold whitespace-nowrap">
+              ${escapeHtml(g.criteria)}
+            </span>
+          </td>
+          <td class="py-3 px-3 text-right font-extrabold text-blue-700 whitespace-nowrap">${fmtMan(g.amounts[0])}</td>
+          <td class="py-3 px-3 text-right font-extrabold text-amber-700 whitespace-nowrap">${fmtMan(g.amounts[1])}</td>
+          <td class="py-3 px-3 text-right font-extrabold text-emerald-700 whitespace-nowrap">${fmtMan(g.amounts[2])}</td>
+          <td class="py-3 px-3 text-right font-extrabold text-rose-700 whitespace-nowrap">${fmtMan(g.amounts[3])}</td>
+          <td class="py-3 px-3 text-slate-600 text-xs leading-relaxed max-w-xs">${escapeHtml(g.rationale)}</td>
+          <td class="py-3 px-2 text-center">
+            <button
+              type="button"
+              onclick="deleteGroup(${g.id})"
+              title="모둠 기록 삭제"
+              class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+            >🗑️</button>
+          </td>
+        </tr>
+      `).join('');
+
+      // 학급 평균 행 (1개 이상일 때 표시)
+      const avg = [0, 1, 2, 3].map((idx) => {
+        const sum = savedGroups.reduce((acc, g) => acc + g.amounts[idx], 0);
+        return Math.round(sum / savedGroups.length);
+      });
+
+      tfoot.innerHTML = `
+        <tr>
+          <td class="py-3 px-3 text-slate-900 whitespace-nowrap" colspan="2">학급 평균 (${savedGroups.length}개 모둠)</td>
+          <td class="py-3 px-3 text-right text-blue-800 whitespace-nowrap">${fmtMan(avg[0])}</td>
+          <td class="py-3 px-3 text-right text-amber-800 whitespace-nowrap">${fmtMan(avg[1])}</td>
+          <td class="py-3 px-3 text-right text-emerald-800 whitespace-nowrap">${fmtMan(avg[2])}</td>
+          <td class="py-3 px-3 text-right text-rose-800 whitespace-nowrap">${fmtMan(avg[3])}</td>
+          <td class="py-3 px-3 text-xs text-slate-500 font-semibold" colspan="2">모둠별 배분액 평균 (반올림)</td>
+        </tr>
+      `;
+    }
+
+    function deleteGroup(id) {
+      savedGroups = savedGroups.filter((g) => g.id !== id);
+      persistGroups();
+      syncUI();
+      renderBoardModal();
+      showToast('모둠 기록을 삭제했어요.', 'info');
+    }
+
+    function showClearConfirm() {
+      document.getElementById('clearAllTriggerBtn').classList.add('hidden');
+      document.getElementById('clearConfirmBar').classList.remove('hidden');
+    }
+
+    function hideClearConfirm() {
+      document.getElementById('clearConfirmBar').classList.add('hidden');
+      if (savedGroups.length > 0) {
+        document.getElementById('clearAllTriggerBtn').classList.remove('hidden');
+      }
+    }
+
+    function confirmClearAll() {
+      savedGroups = [];
+      persistGroups();
+      hideClearConfirm();
+      syncUI();
+      renderBoardModal();
+      showToast('학급 비교표를 모두 비웠어요.', 'info');
+    }
+
+    /* 결과 텍스트 복사 (연소득 대비 부담률 제외, execCommand 사용) */
+    function copyBoardSummary() {
+      const total = allocations.reduce((a, b) => a + b, 0);
+      let text = `[어머니의 빚 6,000만 원 공정하게 나누어 갚기]\n\n`;
+      text += `■ 현재 화면 배분 (합계: ${fmtMan(total)} / 6,000만 원)\n`;
+      SIBLINGS.forEach((s) => {
+        const val = allocations[s.id];
+        const pct = Math.round((val / TARGET_DEBT) * 100);
+        text += `- ${s.order} ${s.name}: ${fmtMan(val)} (전체 빚의 ${pct}%)\n`;
+      });
+
+      if (savedGroups.length > 0) {
+        text += `\n■ 학급 모둠별 비교표 (${savedGroups.length}개 모둠)\n`;
+        savedGroups.forEach((g, i) => {
+          text += `${i + 1}. ${g.groupName} [${g.criteria}]\n`;
+          text += `   김영희 ${g.amounts[0]}만 / 김철수 ${g.amounts[1]}만 / 김영수 ${g.amounts[2]}만 / 김남희 ${g.amounts[3]}만\n`;
+          text += `   이유: ${g.rationale}\n`;
+        });
+      }
+
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast('토의 결과가 클립보드에 복사되었어요!', 'success');
+      } catch (err) {
+        showToast('복사에 실패했어요.', 'warning');
+      } finally {
+        document.body.removeChild(ta);
+      }
+    }
+
+    /* A4 인쇄 / PDF 저장 (비교표 전용 영역 생성 후 인쇄) */
+    function printComparisonBoard() {
+      const printArea = document.getElementById('printOnlyArea');
+      const avg = savedGroups.length > 0
+        ? [0, 1, 2, 3].map((idx) => Math.round(savedGroups.reduce((a, g) => a + g.amounts[idx], 0) / savedGroups.length))
+        : [0, 0, 0, 0];
+
+      const rowsHtml = savedGroups.length > 0
+        ? savedGroups.map((g) => `
+            <tr style="border-bottom: 1px solid #cbd5e1;">
+              <td style="padding: 8px; font-weight: 700;">${escapeHtml(g.groupName)}</td>
+              <td style="padding: 8px;">${escapeHtml(g.criteria)}</td>
+              <td style="padding: 8px; text-align: right;">${fmtMan(g.amounts[0])}</td>
+              <td style="padding: 8px; text-align: right;">${fmtMan(g.amounts[1])}</td>
+              <td style="padding: 8px; text-align: right;">${fmtMan(g.amounts[2])}</td>
+              <td style="padding: 8px; text-align: right;">${fmtMan(g.amounts[3])}</td>
+              <td style="padding: 8px; font-size: 12px;">${escapeHtml(g.rationale)}</td>
+            </tr>
+          `).join('')
+        : `<tr><td colspan="7" style="padding: 20px; text-align: center; color: #64748b;">등록된 모둠 기록이 없습니다.</td></tr>`;
+
+      const footHtml = savedGroups.length > 0
+        ? `
+          <tr style="background: #f1f5f9; font-weight: 800; border-top: 2px solid #334155;">
+            <td colspan="2" style="padding: 9px;">학급 평균 (${savedGroups.length}개 모둠)</td>
+            <td style="padding: 9px; text-align: right;">${fmtMan(avg[0])}</td>
+            <td style="padding: 9px; text-align: right;">${fmtMan(avg[1])}</td>
+            <td style="padding: 9px; text-align: right;">${fmtMan(avg[2])}</td>
+            <td style="padding: 9px; text-align: right;">${fmtMan(avg[3])}</td>
+            <td style="padding: 9px; font-size: 11px; color: #475569;">모둠별 평균(반올림)</td>
+          </tr>
+        `
+        : '';
+
+      printArea.innerHTML = `
+        <div style="font-family: 'Pretendard', 'Noto Sans KR', sans-serif;">
+          <h1 style="font-size: 22px; font-weight: 800; margin-bottom: 6px;">어머니의 빚 6,000만 원 — 학급 공정 분배 토의 결과표</h1>
+          <p style="font-size: 13px; color: #475569; margin-bottom: 18px;">
+            상황: 어머니가 남긴 6,000만 원의 빚을 4남매(김영희·김철수·김영수·김남희)가 어떻게 나누어 갚을지 토의한 결과입니다.
+          </p>
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+              <tr style="border-bottom: 2px solid #0f172a; background: #f8fafc;">
+                <th style="padding: 8px; text-align: left;">모둠</th>
+                <th style="padding: 8px; text-align: left;">공정성 기준</th>
+                <th style="padding: 8px; text-align: right;">첫째 김영희</th>
+                <th style="padding: 8px; text-align: right;">둘째 김철수</th>
+                <th style="padding: 8px; text-align: right;">셋째 김영수</th>
+                <th style="padding: 8px; text-align: right;">넷째 김남희</th>
+                <th style="padding: 8px; text-align: left;">정한 이유</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+            <tfoot>${footHtml}</tfoot>
+          </table>
+        </div>
+      `;
+
+      window.print();
+    }
+
+    /* =========================================================================
+       10. 초기화 실행
+       ========================================================================= */
+    window.addEventListener('DOMContentLoaded', () => {
+      renderSiblingCards();
+    });
+  </script>
+</body>
+</html>
